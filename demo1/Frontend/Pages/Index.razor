@@ -1,0 +1,118 @@
+@page "/"
+@inject HttpClient Http
+@inject IHttpClientFactory ClientFactory
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Configuration
+@using System.Text.Json
+@using Models
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+@inject IConfiguration Configuration
+
+<h1>Demo - Open Telemetry con .NET</h1>
+<hr>
+<div class="row">
+    <div class="col-md-6">
+        <h3>Confirmar Ordenes</h3>
+        <SurveyPrompt Title="Ingrese un número de orden aleatorio: " />
+
+        <label>No. de Orden</label>
+        <input type="text" @bind="@OrderID" @oninput="@((e) => { OrderID=(string)e.Value;})" />
+
+        <button class="btn btn-primary" @onclick="SendConfirmation">Confirmar Orden</button>
+
+        @if (!string.IsNullOrEmpty(MessageOrder))
+        {
+            <div class="alert alert-primary mt-4" role="alert">
+                <span class="oi oi-circle-check mr-2" aria-hidden="true"></span>
+                <strong>Respuesta: @MessageOrder</strong>
+            </div>
+        }
+    </div>
+    <div class="col-md-6">
+        <h3>Notificaciones (SignalR)</h3>
+
+        <p>
+            @foreach (var message in messages)
+            {
+                if (message.Type == "Initial"){
+                    <div class="alert alert-warning mt-4" role="alert">
+                        <span class="oi oi-cog mr-2" aria-hidden="true"></span>
+                        <strong> @message.Message </strong>
+                    </div>
+                }else if (message.Type == "Finish"){
+                    <div class="alert alert-success mt-4" role="alert">
+                        <span class="oi oi-credit-card mr-2" aria-hidden="true"></span>
+                        <strong> @message.Message </strong>
+                        <button @onclick="@(() => ShowOrder(message.OrderID))" class="btn btn-primary">Ver Orden</button>
+                    </div>
+                }
+            }
+        </p>
+    </div>
+</div>
+
+@code {
+    private string OrderID {get;set;} = "";
+    private HubConnection hubConnection;
+    private List<NotificationDto> messages = new List<NotificationDto>();
+     private string MessageOrder {get;set;} = "";
+
+    private async Task SendConfirmation()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get,
+            $"{Configuration["OrdersApiUrl"]}/Orders/confirm/{OrderID}");
+
+        var client = ClientFactory.CreateClient();
+
+        var response = await client.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var responseStream = await response.Content.ReadAsStringAsync();
+            MessageOrder = responseStream.ToString();
+        }
+        else
+        {
+            
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri($"{Configuration["NotificationsApiUrl"]}/notifications"))
+            .Build();
+
+        hubConnection.On<string>("notifications", (message) =>
+        {
+            var encodedMsg = $"{message}";
+            var msg = JsonSerializer.Deserialize<NotificationDto>(encodedMsg);
+            messages.Add(msg);
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public bool IsConnected =>
+        hubConnection.State == HubConnectionState.Connected;
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    [CascadingParameter] public IModalService Modal { get; set; }
+
+    void ShowOrder(int OrderID)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(Confirm.OrderID), OrderID);
+
+        Modal.Show<Confirm>("Información de Orden", parameters);
+    }
+}
