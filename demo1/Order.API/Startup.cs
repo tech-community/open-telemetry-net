@@ -52,6 +52,9 @@ namespace Order.API
 
                     services.Configure<JaegerExporterOptions>(this.Configuration.GetSection("Jaeger"));
                     break;
+                case "appinsight":
+                    services.AddApplicationInsightsTelemetry();
+                    break;
                 default:
                     services.AddOpenTelemetryTracing((builder) => builder
                         .AddAspNetCoreInstrumentation()

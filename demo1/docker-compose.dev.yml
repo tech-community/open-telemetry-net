@@ -23,17 +23,3 @@ services:
       - 5440:1433
     networks:
       - tracing
-  jaeger:
-    image: jaegertracing/all-in-one
-    container_name: jaeger
-    restart: unless-stopped
-    ports:
-      - 5775:5775/udp
-      - 5778:5778
-      - 6831:6831/udp
-      - 6832:6832/udp
-      - 9411:9411
-      - 14268:14268
-      - 16686:16686
-    networks:
-      - tracing

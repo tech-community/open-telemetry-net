@@ -41,6 +41,7 @@ namespace Frontend
             {
                 client.BaseAddress = new Uri(Configuration["PaymentsApiUrl"]);
             });
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

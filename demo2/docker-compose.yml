@@ -36,6 +36,8 @@ services:
       - 9411:9411
       - 14268:14268
       - 16686:16686
+    networks:
+      - telemetry
   frontend:
     container_name: frontend
     hostname: frontend
