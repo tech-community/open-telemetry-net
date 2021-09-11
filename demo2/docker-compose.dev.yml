@@ -1,0 +1,25 @@
+version: '3.4'
+
+networks:
+  tracing:
+    name: tracing-network
+    
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - tracing
+  sql_server:
+    container_name: sql_server
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - SA_PASSWORD=_SqLr0ck_
+      - ACCEPT_EULA=Y
+    ports:
+      - 5440:1433
+    networks:
+      - tracing
