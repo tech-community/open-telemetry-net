@@ -1,0 +1,56 @@
+@using Frontend.Data
+@using Models
+@inject IOrdersService OrdersService
+
+<div>
+    @if (Order != null){
+    <label>Orden: </label> @Order.OrderID <br>
+    <label>Cliente: </label> @Order.ClientName <br>
+    <label>Dirección: </label> @Order.Address <br>
+    <label>UUID Transacción: </label> @Order.UuidTransaction <br>
+    <label>Pasarela: </label> @Order.PaymentGateway <br>
+
+    
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>Cantidad</td>
+                    <td>Producto</td>
+                    <td>Precio</td>
+                    <td>Subtotal</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Order.OrderDetail)
+                {
+                    <tr>
+                        <td> @item.Quantity </td>
+                        <td> @item.Product </td>
+                        <td> @item.Price </td>
+                        <td> @item.Subtotal </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    
+
+
+    <button @onclick="Close" class="btn btn-primary">Cerrar</button>
+</div>
+
+@code {
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    [Parameter] public int OrderID { get; set; }
+
+    private OrderDto Order = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Order = await OrdersService.GetOrderAsync(OrderID);
+    }
+
+    void Close() => BlazoredModal.CloseAsync(ModalResult.Ok(true));
+}

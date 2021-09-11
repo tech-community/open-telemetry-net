@@ -40,6 +40,13 @@ namespace Notifications.API
                 app.UseDeveloperExceptionPage();
             }
 
+            var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{env.EnvironmentName}.json")
+            .AddEnvironmentVariables()
+            .Build();
+
+
             app.UseRouting();
 
             app.UseAuthorization();

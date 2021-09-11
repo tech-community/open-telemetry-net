@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure.Monitor.OpenTelemetry.Exporter;
@@ -40,19 +41,37 @@ namespace demo1
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "demo1", Version = "v1" });
             });
 
-            /*services.AddOpenTelemetryTracing((builder) => builder
-                        .SetResourceBuilder(ResourceBuilder.CreateDefault()
-                        .AddService("Demo.DemoClient"))
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation()
-                        .AddAzureMonitorTraceExporter(o => {
-                            o.ConnectionString = "InstrumentationKey=169ee642-657e-4dfb-9ae5-578f66e18fd7;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/";
-                        }
-                        ));
-            */
+            
+            // services.AddOpenTelemetryTracing((builder) => builder
+            //             .AddSource("Demo.DemoClient")
+            //             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Demo.DemoClient").AddTelemetrySdk())
+            //             .AddSqlClientInstrumentation(s =>
+            //             {
+            //                 s.SetDbStatementForStoredProcedure = true;
+            //                 s.SetDbStatementForText = true;
+            //                 s.RecordException = true;
+            //             })
+            //             .AddAspNetCoreInstrumentation(options =>
+            //             {
+            //                 options.RecordException = true;
+            //                 options.Filter = (req) => !req.Request.Path.ToUriComponent().Contains("swagger", StringComparison.OrdinalIgnoreCase);
+            //             })
+            //             .AddHttpClientInstrumentation((options) => options.RecordException = true)
+            //             .AddConsoleExporter()
+            //             .AddAzureMonitorTraceExporter(o =>
+            //             {
+            //                 o.ConnectionString = "InstrumentationKey=27b120b9-5e3a-4b6d-ae4e-7eb14fca678a";
+            //             }));
+
 
             
 
+            // services.AddOpenTelemetryTracing((builder) => builder
+            // .AddSource("Demo.DemoClient")
+            // .AddAzureMonitorTraceExporter(o =>
+            // {
+            //     o.ConnectionString = "InstrumentationKey=27b120b9-5e3a-4b6d-ae4e-7eb14fca678a";
+            // }));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

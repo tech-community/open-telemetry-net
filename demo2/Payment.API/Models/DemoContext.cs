@@ -9,5 +9,7 @@ namespace Payment.API.Models
             : base(options)
         { }
         public DbSet<Order> Orders { get; set; }
+
+        public DbSet<OrderDetail> OrderDetail { get; set; }
     }
 }

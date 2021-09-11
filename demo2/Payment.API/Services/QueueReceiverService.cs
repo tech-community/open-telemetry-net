@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Payment.API.Models.DTOs;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-
+using System.Text.Json;
 namespace Payment.API.Services
 {
     public class QueueReceiverService : BackgroundService
@@ -51,10 +50,17 @@ namespace Payment.API.Services
             consumer.Received += (ch, ea) =>
             {
                 var content = Encoding.UTF8.GetString(ea.Body.ToArray());
-                var order = JsonConvert.DeserializeObject<OrderDto>(content);
+                var order = JsonSerializer.Deserialize<OrderDto>(content);
                 _logger.LogInformation($"Orden #{order.OrderID}. Mensaje histórico recibido. ");
 
-                SendMessageQueue($"Orden #{order.OrderID} en proceso de confirmación.");
+                string msj = $"Orden #{order.OrderID} en proceso de confirmación.";
+                NotificationDto notification = new NotificationDto();
+                notification.Type = "Initial";
+                notification.Message = msj;
+                notification.OrderID = order.OrderID;
+                notification.Date = DateTime.Now;
+
+                SendMessageQueue(notification);
                 _channel.BasicAck(ea.DeliveryTag, false);
             };
             consumer.Shutdown += OnConsumerShutdown;
@@ -67,7 +73,7 @@ namespace Payment.API.Services
             return Task.CompletedTask;
         }
 
-        private void SendMessageQueue(string message){
+        private void SendMessageQueue(NotificationDto item){
             try
             {
                  var factory = new ConnectionFactory { HostName = _hostname };
@@ -82,8 +88,8 @@ namespace Payment.API.Services
                             exclusive: false,
                             autoDelete: false,
                             arguments: null);
-
-                        var body = Encoding.UTF8.GetBytes(message);
+                        
+                        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item));
 
                         _logger.LogInformation($"Publicando mensaje a cola: {_queueName2}");
                         channel.BasicPublish(exchange: "",

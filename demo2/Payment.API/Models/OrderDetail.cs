@@ -12,5 +12,7 @@ namespace Payment.API.Models
         public decimal Price {get;set;}
         public decimal Subtotal {get;set;}
         public int OrderID { get; set; }
+
+        public Order Order {get;set;}
     }
 }

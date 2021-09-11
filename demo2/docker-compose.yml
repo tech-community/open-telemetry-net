@@ -1,0 +1,92 @@
+version: '3.4'
+
+networks:
+  telemetry:
+    name: demo-opentelemetry
+    
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - telemetry
+  sql_server:
+    container_name: sql_server
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - SA_PASSWORD=_SqLr0ck_
+      - ACCEPT_EULA=Y
+    ports:
+      - 1433
+    networks:
+      - telemetry
+  frontend:
+    container_name: frontend
+    hostname: frontend
+    build:
+      context: ./Frontend
+    ports:
+      - "8080:80"
+    networks:
+      - telemetry
+    depends_on: 
+      - notifications
+      - payment
+      - order
+    environment:
+      OrdersApiUrl: http://order
+      PaymentsApiUrl: http://payment
+      NotificationsApiUrl: http://notifications
+  notifications:
+    container_name: notifications
+    hostname: notifications
+    build:
+      context: ./Notifications.API
+    ports:
+      - "5002:80"
+    networks:
+      - telemetry
+    depends_on: 
+      - rabbitmq
+    entrypoint: ["./wait.sh", "30", "dotnet", "Notifications.API.dll"]
+    environment:
+      RabbitMq__Host: rabbitmq
+  order:
+    container_name: order
+    hostname: order
+    build:
+      context: ./Order.API
+    ports:
+      - "5000:80"
+    networks:
+      - telemetry
+    depends_on: 
+      - rabbitmq
+      - payment
+    entrypoint: ["./wait.sh", "30", "dotnet", "Order.API.dll"]
+    environment:
+      RabbitMq__Host: rabbitmq
+      PaymentAPI_URL: http://payment
+  payment:
+    container_name: payment
+    hostname: payment
+    build:
+      context: ./Payment.API
+    ports:
+      - "5001:80"
+    networks:
+      - telemetry
+    depends_on: 
+      - rabbitmq
+      - sql_server
+    entrypoint: ["./wait.sh", "30", "dotnet", "Payment.API.dll"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      RabbitMq__Hostname: rabbitmq
+      RabbitMq__QueueName: history
+      RabbitMq__QueueName2: messages
+      RabbitMq__Enabled: true
+      ConnectionStrings__DemoContext: "Server=sql_server,1433;Database=Ecommerce;user id=SA;password=_SqLr0ck_"

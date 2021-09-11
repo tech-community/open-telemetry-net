@@ -45,6 +45,12 @@ namespace Order.API
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Order.API v1"));
             }
 
+            var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{env.EnvironmentName}.json")
+            .AddEnvironmentVariables()
+            .Build();
+
             app.UseHttpsRedirection();
 
             app.UseRouting();

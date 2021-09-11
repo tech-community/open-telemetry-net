@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Frontend.Data;
 using Microsoft.AspNetCore.ResponseCompression;
+using Blazored.Modal;
 
 namespace Frontend
 {
@@ -30,10 +31,15 @@ namespace Frontend
             services.AddServerSideBlazor();
             services.AddHttpClient();
             services.AddSingleton<WeatherForecastService>();
+            services.AddBlazoredModal();
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                     new[] { "application/octet-stream" });
+            });
+            services.AddHttpClient<IOrdersService, OrdersService>(client =>
+            {
+                client.BaseAddress = new Uri(Configuration["PaymentsApiUrl"]);
             });
         }
 
@@ -50,6 +56,12 @@ namespace Frontend
             {
                 app.UseExceptionHandler("/Error");
             }
+
+            var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{env.EnvironmentName}.json")
+            .AddEnvironmentVariables()
+            .Build();
 
             app.UseStaticFiles();
 

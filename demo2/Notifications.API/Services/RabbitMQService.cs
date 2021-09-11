@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Notifications.API.Hubs;
 using RabbitMQ.Client;
@@ -13,18 +14,20 @@ public class RabbitMQService : IRabbitMQService
         protected readonly ConnectionFactory _factory;
         protected readonly IConnection _connection;
         protected readonly IModel _channel;
- 
+        private readonly IConfiguration _configuration;
         protected readonly IServiceProvider _serviceProvider;
 
         private readonly ILogger<RabbitMQService> _logger;
  
-        public RabbitMQService(IServiceProvider serviceProvider, ILogger<RabbitMQService> logger)
+        public RabbitMQService(IServiceProvider serviceProvider, IConfiguration configuration, ILogger<RabbitMQService> logger)
         {
-            _factory = new ConnectionFactory() { HostName = "localhost" };
-            _connection = _factory.CreateConnection();
-            _channel = _connection.CreateModel();
+            _configuration = configuration;
             _logger = logger;
             _serviceProvider = serviceProvider;
+
+            _factory = new ConnectionFactory() { HostName = _configuration["RabbitMq:Host"] };
+            _connection = _factory.CreateConnection();
+            _channel = _connection.CreateModel();
         }
  
         public virtual void Connect()

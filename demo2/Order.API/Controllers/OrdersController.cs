@@ -29,8 +29,8 @@ namespace Order.API.Controllers
         public OrdersController(ILogger<OrdersController> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
             _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet("confirm/{id}")]
@@ -60,7 +60,7 @@ namespace Order.API.Controllers
             _logger.LogInformation($"Llamando a Payment.API: {_configuration["PaymentAPI_URL"]}");
             var response  = await _httpClientFactory
                 .CreateClient()
-                .PostAsync(_configuration["PaymentAPI_URL"] + "/payments/pay", httpContent);
+                .PostAsync($"{_configuration["PaymentAPI_URL"]}/payments/pay", httpContent);
 
             if (response.Content != null) {
                 return await response.Content.ReadAsStringAsync();
@@ -76,7 +76,7 @@ namespace Order.API.Controllers
 
         private List<OrderDetailDto> GetRandomDetails(){
             var rng = new Random();
-            var cntItems = rng.Next(1,20);
+            var cntItems = rng.Next(1,8);
             List<OrderDetailDto> lstItems = new List<OrderDetailDto>();
 
             for (int x = 0; x <= cntItems;x++){
